@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>ABLE Management</title>
+<style>
+  :root{
+    --bg: #F7F3EE;
+    --panel: #FFFFFF;
+    --ink: #2A1F1F;
+    --ink-soft: #7A6F6F;
+    --line: #E8DED8;
+    --navy: #6E1E2E;
+    --navy-soft: #8C3A4A;
+    --accent: #C9A227;
+    --blue: #3B6FA6;
+    --green: #4C8A63;
+    --amber: #C08A2E;
+    --red: #B94A3D;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family: -apple-system, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-size:14px;
+  }
+  .app{ max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
+  header.top{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 18px; flex-wrap: wrap; gap:10px;
+  }
+  .brand{ display:flex; align-items:baseline; gap:10px; }
+  .brand .mark{
+    font-weight:800; font-size:20px; letter-spacing:-0.02em; color: var(--navy);
+  }
+  .brand .sub{ font-size:12px; color: var(--ink-soft); }
+  .role-select{
+    display:flex; align-items:center; gap:8px; background:var(--panel);
+    border:1px solid var(--line); border-radius: 999px; padding: 6px 6px 6px 14px;
+  }
+  .role-select label{ font-size:12px; color:var(--ink-soft); }
+  select, input, button{
+    font-family: inherit; font-size: 13px;
+  }
+  select{
+    border:none; background:transparent; font-weight:700; color:var(--navy);
+    padding: 4px 8px; border-radius: 999px; cursor:pointer;
+  }
+  nav.tabs{
+    display:flex; gap:4px; background:var(--panel); padding:4px; border-radius: 12px;
+    border:1px solid var(--line); margin-bottom:18px; width:fit-content;
+  }
+  nav.tabs button{
+    border:none; background:transparent; padding: 9px 18px; border-radius:9px;
+    cursor:pointer; font-weight:600; color:var(--ink-soft);
+  }
+  nav.tabs button.active{ background: var(--navy); color:#fff; }
+
+  .panel{
+    background:var(--panel); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 18px; margin-bottom:16px;
+  }
+  .panel h3{ margin:0 0 12px; font-size:15px; color:var(--navy); }
+  .row{ display:flex; gap:10px; flex-wrap:wrap; }
+  .field{ display:flex; flex-direction:column; gap:4px; margin-bottom:10px; }
+  .field label{ font-size:12px; color:var(--ink-soft); font-weight:600; }
+  .field input, .field select{
+    border:1px solid var(--line); border-radius:8px; padding:8px 10px; background:#FCFCFB;
+    font-weight:500; color:var(--ink); min-width: 140px;
+  }
+  .field.grow{ flex:1; min-width:200px; }
+  .btn{
+    border:none; border-radius:8px; padding:9px 16px; font-weight:700; cursor:pointer;
+    background: var(--navy); color:#fff;
+  }
+  .btn.secondary{ background:#EFEDE7; color:var(--navy); }
+  .btn.warn{ background: var(--amber); color:#fff; }
+  .btn.danger{ background: var(--red); color:#fff; }
+  .btn.small{ padding:5px 10px; font-size:12px; border-radius:6px; }
+  .btn:disabled{ opacity:.45; cursor:not-allowed; }
+
+  table{ width:100%; border-collapse: collapse; }
+  th, td{ text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); font-size:13px; vertical-align:middle;}
+  th{ color:var(--ink-soft); font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:.03em; }
+  tr:hover td{ background: #FAFAF8; }
+
+  .badge{
+    display:inline-block; padding:2px 9px; border-radius:999px; font-size:11px; font-weight:700;
+  }
+  .badge.scheduled{ background:#EDEDED; color:#1A1A1A; }
+  .badge.completed{ background:#E9F3EC; color:var(--green); }
+  .badge.delayed{ background:#FBF0DD; color:var(--amber); }
+  .badge.noshow{ background:#FBEAE7; color:var(--red); }
+  .badge.moved{ background:#F1EFEA; color:var(--ink-soft); }
+  .badge.blocked{ background:#E9F0F9; color:var(--blue); }
+
+  .day-group{ margin-bottom: 14px; }
+  .day-title{
+    font-weight:800; color:var(--navy); font-size:13px; margin: 18px 0 6px;
+    padding-bottom:6px; border-bottom: 2px solid var(--navy);
+  }
+  .empty{ color:var(--ink-soft); font-size:13px; padding: 20px 6px; text-align:center; }
+  .progress-wrap{ display:flex; align-items:center; gap:8px; }
+  .progress-bar{ width:70px; height:6px; background:#EEECE6; border-radius:99px; overflow:hidden; }
+  .progress-bar > div{ height:100%; background: var(--accent); }
+  .warning-box{
+    background:#FBEAE7; border:1px solid #EAC4BC; color:var(--red);
+    padding:10px 12px; border-radius:8px; font-size:12.5px; margin-bottom:10px; display:none;
+  }
+  .toast{
+    position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+    background: var(--navy); color:#fff; padding:10px 18px; border-radius:999px;
+    font-size:13px; font-weight:600; box-shadow:0 8px 24px rgba(0,0,0,.18);
+    opacity:0; pointer-events:none; transition: opacity .2s, transform .2s; z-index:50;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(-4px); }
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(20,20,20,.4); display:none;
+    align-items:center; justify-content:center; z-index:40; padding:16px;
+  }
+  .modal-backdrop.show{ display:flex; }
+  .modal{
+    background:#fff; border-radius:12px; padding:20px; width:100%; max-width:420px;
+    max-height:88vh; overflow:auto;
+  }
+  .modal h4{ margin:0 0 12px; color:var(--navy); }
+  .muted{ color:var(--ink-soft); font-size:12px; }
+  .divider{ height:1px; background:var(--line); margin:14px 0; }
+  .actions-cell{ display:flex; gap:4px; flex-wrap:wrap; }
+  .note{ font-size:12px; color:var(--ink-soft); margin-top:10px; line-height:1.6; }
+  .loading{ text-align:center; padding:40px; color:var(--ink-soft); }
+  table.timetable td{ padding:4px; vertical-align:top; }
+  table.timetable th{ text-align:center; }
+  .tt-cell{
+    border-radius:6px; padding:3px 5px; font-size:10px; font-weight:600; cursor:pointer;
+    background:#EDEDED; color:#1A1A1A; line-height:1.3;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .tt-cell.completed{ background:#E9F3EC; color:var(--green); }
+  .tt-cell.noshow{ background:#FBEAE7; color:var(--red); text-decoration: line-through; }
+  .tt-cell.blocked{ background:#E9F0F9; color:var(--blue); font-style:italic; cursor:default; }
+  .pay-tag{ color: var(--red); font-weight:800; }
+  .tt-cell.pay-due{
+    background: linear-gradient(90deg, #FFF3C4, #FFE49C);
+    color: #7A1F1F;
+    font-weight:800;
+    border: 1px solid #E8B93B;
+  }
+  .pay-banner{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    background: linear-gradient(90deg, #FFF3C4, #FFE9A8);
+    border: 1px solid #E8B93B;
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+  .pay-banner-icon{ font-size:18px; }
+  .pay-banner-title{ font-weight:800; color:#7A1F1F; }
+  .pay-banner-list{ color:#5A3A1F; font-weight:600; }
+  .tt-cell:hover{ filter: brightness(0.96); overflow:visible; white-space:normal; }
+  .week-nav{ display:flex; gap:6px; align-items:center; }
+  .cal-grid{
+    display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; margin-top:6px;
+  }
+  .cal-head{ margin-top:0; margin-bottom:2px; }
+  .cal-daylabel{ text-align:center; font-size:11px; font-weight:700; color:var(--ink-soft); padding:2px 0; }
+  .cal-cell{
+    border:1px solid var(--line); border-radius:8px; min-height:96px; padding:6px;
+    background:#FCFCFB; display:flex; flex-direction:column; gap:3px; overflow:hidden;
+  }
+  .cal-cell.empty-cell{ background:transparent; border:none; }
+  .cal-cell.today{ border-color: var(--navy); background:#F1F4F9; }
+  .cal-daynum{ font-size:11px; font-weight:700; color:var(--ink-soft); }
+  .cal-daynum.holiday{ color: var(--red); }
+  .cal-daynum.sunday{ color: var(--red); opacity:0.75; }
+  .holiday-tag{ font-size:9px; font-weight:600; color: var(--red); }
+  #ttTeacherSelect{
+    border:1px solid var(--line); border-radius:8px; padding:6px 10px; font-weight:700; color:var(--navy); background:#fff;
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="loading" id="loadingMsg">불러오는 중...</div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-backdrop" id="modalBackdrop"><div class="modal" id="modalBody"></div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://cpxlmgmcmsjznwjxfhgc.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_nrqFXM7Da0_-6zyRP4X8Hw_zbWaCJwL';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const STORAGE_KEY = 'able-management-v1';
+let data = null; // { teachers:[], students:[], sessions:[] }
+let currentTab = 'schedule';
+let currentRole = 'admin'; // 'admin' or teacherId
+let currentWeekStart = null; // set after helpers defined
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._h);
+  toast._h = setTimeout(()=> t.classList.remove('show'), 2200);
+}
+
+async function loadData(){
+  try{
+    const { data: row, error } = await supabaseClient
+      .from('app_data')
+      .select('value')
+      .eq('id', STORAGE_KEY)
+      .maybeSingle();
+    if(error) throw error;
+    data = (row && row.value) ? row.value : { teachers: [], students: [], sessions: [], blocks: [] };
+    if(!data.blocks) data.blocks = []; // backward compatibility for data saved before this feature
+  }catch(e){
+    console.error('loadData error', e);
+    data = { teachers: [], students: [], sessions: [], blocks: [] };
+    toast('데이터를 불러오지 못했어요. 인터넷 연결을 확인해주세요.');
+  }
+
+  // Personal teacher links: opening "...?teacher=<teacherId>" auto-selects that
+  // teacher's view (still asks for their PIN first if one is set).
+  const linkTeacherId = new URLSearchParams(location.search).get('teacher');
+  if(linkTeacherId && data.teachers.find(t=>t.id===linkTeacherId)){
+    attemptRoleSwitch(linkTeacherId, ()=>{}, ()=>{ render(); });
+  } else {
+    render();
+  }
+}
+
+async function saveData(){
+  try{
+    const { error } = await supabaseClient
+      .from('app_data')
+      .upsert({ id: STORAGE_KEY, value: data, updated_at: new Date().toISOString() });
+    if(error) throw error;
+  }catch(e){
+    console.error('saveData error', e);
+    toast('저장 실패: 인터넷 연결을 확인하고 다시 시도해주세요.');
+  }
+}
+
+// All date math below intentionally avoids new Date(str).toISOString() round-trips,
+// because that path silently shifts dates by one day for any timezone ahead of UTC
+// (e.g. Korea, UTC+9) — that was the root cause of "7/18 saved as 7/17".
+// Instead we parse Y/M/D ourselves and always read/write using UTC accessors.
+function parseYMD(dateStr){
+  const [y,m,d] = dateStr.split('-').map(Number);
+  return {y,m,d};
+}
+function toYMD(dt){
+  const y = dt.getUTCFullYear();
+  const m = String(dt.getUTCMonth()+1).padStart(2,'0');
+  const d = String(dt.getUTCDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+function fmtDate(d){
+  const p = parseYMD(d);
+  const dow = new Date(Date.UTC(p.y, p.m-1, p.d)).getUTCDay();
+  const days = ['일','월','화','수','목','금','토'];
+  return `${p.m}월 ${p.d}일 (${days[dow]})`;
+}
+function addDays(dateStr, n){
+  const {y,m,d} = parseYMD(dateStr);
+  const dt = new Date(Date.UTC(y, m-1, d));
+  dt.setUTCDate(dt.getUTCDate()+n);
+  return toYMD(dt);
+}
+function todayStr(){
+  // Local calendar date (not UTC) — this is "today" as the person sees it on their clock.
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const d = String(now.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+function startOfWeek(dateStr){
+  const {y,m,d} = parseYMD(dateStr);
+  const dt = new Date(Date.UTC(y, m-1, d));
+  const day = dt.getUTCDay();
+  const diff = (day === 0 ? -6 : 1 - day);
+  dt.setUTCDate(dt.getUTCDate()+diff);
+  return toYMD(dt);
+}
+function fmtDateShort(d){
+  const p = parseYMD(d);
+  const dow = new Date(Date.UTC(p.y, p.m-1, p.d)).getUTCDay();
+  const days = ['일','월','화','수','목','금','토'];
+  return `${p.m}/${p.d} (${days[dow]})`;
+}
+function addMonths(yyyymm, n){
+  let [y,m] = yyyymm.split('-').map(Number);
+  m += n;
+  while(m>12){ m-=12; y+=1; }
+  while(m<1){ m+=12; y-=1; }
+  return `${y}-${String(m).padStart(2,'0')}`;
+}
+function daysInMonth(y,m){ // m is 1-based
+  return new Date(Date.UTC(y, m, 0)).getUTCDate();
+}
+function firstWeekdayOfMonth(y,m){ // m is 1-based; returns 0(sun)..6(sat)
+  return new Date(Date.UTC(y, m-1, 1)).getUTCDay();
+}
+
+// 2026 South Korea legal public holidays (관공서의 공휴일에 관한 규정 기준).
+// NOTE: covers 2026 (and Jan 1 2027) since that's the period this app is used in.
+// Lunar-based holidays (설날, 추석, 부처님오신날) shift every year, so this table
+// will need new dates added for 2027 onward once they're confirmed.
+const HOLIDAYS_2026 = {
+  '2026-01-01': '신정',
+  '2026-02-16': '설날 연휴',
+  '2026-02-17': '설날',
+  '2026-02-18': '설날 연휴',
+  '2026-03-01': '삼일절',
+  '2026-03-02': '대체공휴일(삼일절)',
+  '2026-05-05': '어린이날',
+  '2026-05-24': '부처님오신날',
+  '2026-05-25': '대체공휴일(부처님오신날)',
+  '2026-06-03': '전국동시지방선거',
+  '2026-06-06': '현충일',
+  '2026-07-17': '제헌절',
+  '2026-08-15': '광복절',
+  '2026-08-17': '대체공휴일(광복절)',
+  '2026-09-24': '추석 연휴',
+  '2026-09-25': '추석',
+  '2026-09-26': '추석 연휴',
+  '2026-10-03': '개천절',
+  '2026-10-05': '대체공휴일(개천절)',
+  '2026-10-09': '한글날',
+  '2026-12-25': '크리스마스',
+  '2027-01-01': '신정',
+};
+function holidayLabel(dateStr){
+  return HOLIDAYS_2026[dateStr] || null;
+}
+
+currentWeekStart = startOfWeek(todayStr());
+let currentMonth = todayStr().slice(0,7); // 'YYYY-MM'
+let timetableTeacherId = null;
+let scheduleSearchQuery = '';
+let studentSearchQuery = '';
+let scheduleTeacherFilter = 'all';
+let scheduleMonthFilter = todayStr().slice(0,7);
+
+const SUBJECT_CATEGORIES = [
+  { name: '과목', items: [
+    { id:'acting_audition', label:'연기오디션', abbr:'연오' },
+    { id:'acting_hobby', label:'연기취미', abbr:'연취' },
+    { id:'mind_acting', label:'마인드액팅', abbr:'마인드' },
+    { id:'musical_hobby', label:'뮤지컬취미', abbr:'뮤취' },
+    { id:'musical_audition', label:'뮤지컬오디션', abbr:'뮤오' },
+    { id:'dance', label:'무용', abbr:'무용' },
+  ]},
+];
+const SUBJECT_BY_ID = {};
+SUBJECT_CATEGORIES.forEach(cat=> cat.items.forEach(it=> SUBJECT_BY_ID[it.id]=it));
+
+function subjectAbbr(student){
+  if(!student || !student.subjects || student.subjects.length===0) return '';
+  return student.subjects.map(id=> SUBJECT_BY_ID[id] ? SUBJECT_BY_ID[id].abbr : '').join('');
+}
+function subjectLabelsFull(student){
+  if(!student || !student.subjects || student.subjects.length===0) return '-';
+  return student.subjects.map(id=> SUBJECT_BY_ID[id] ? SUBJECT_BY_ID[id].label : null).filter(Boolean).join(', ');
+}
+function subjectCheckboxesHtml(selectedIds, classNameForInputs){
+  const selected = selectedIds || [];
+  return SUBJECT_CATEGORIES.map(cat=>`
+    <div style="margin-bottom:6px">
+      <div class="muted" style="font-weight:700; margin-bottom:4px">${cat.name}</div>
+      <div class="row" style="flex-wrap:wrap; gap:4px 14px">
+        ${cat.items.map(it=>`
+          <label style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:500; cursor:pointer;">
+            <input type="checkbox" class="${classNameForInputs}" value="${it.id}" ${selected.includes(it.id)?'checked':''}> ${it.label}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function teacherName(id){
+  const t = data.teachers.find(x=>x.id===id);
+  return t ? t.name : '(미배정)';
+}
+function studentName(id){
+  const s = data.students.find(x=>x.id===id);
+  return s ? s.name : '(삭제된 학생)';
+}
+function weekdayOf(dateStr){
+  const p = parseYMD(dateStr);
+  return new Date(Date.UTC(p.y, p.m-1, p.d)).getUTCDay();
+}
+function studentScheduleSummary(studentId){
+  const sessions = data.sessions.filter(s=>s.studentId===studentId);
+  if(sessions.length===0) return '-';
+  const dayNames = ['일','월','화','수','목','금','토'];
+  const uniqueTimes = new Set(sessions.map(s=>s.time));
+  const uniqueWeekdays = new Set(sessions.map(s=>weekdayOf(s.date)));
+  if(uniqueTimes.size===1 && uniqueWeekdays.size===1){
+    const wd = [...uniqueWeekdays][0];
+    const t = [...uniqueTimes][0];
+    return `매주 ${dayNames[wd]} ${t}`;
+  }
+  const sorted = sessions.slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  const parts = sorted.map(s=>`${fmtDateShort(s.date)} ${s.time}`);
+  if(parts.length > 4){
+    return parts.slice(0,4).join(', ') + ` 외 ${parts.length-4}건`;
+  }
+  return parts.join(', ');
+}
+
+// ---- time/duration helpers ----
+function addMinutesToTime(timeStr, minutes){
+  const [h, m] = timeStr.split(':').map(Number);
+  let total = h*60 + m + minutes;
+  total = ((total % 1440) + 1440) % 1440; // wrap within a day, just in case
+  const hh = String(Math.floor(total/60)).padStart(2,'0');
+  const mm = String(total%60).padStart(2,'0');
+  return `${hh}:${mm}`;
+}
+function timeRangesOverlap(startA, endA, startB, endB){
+  return startA < endB && startB < endA;
+}
+
+// ---- conflict check ----
+// duration is in minutes; every session now has a length (50/80/90 min etc.), so
+// two classes conflict if their time RANGES overlap, not just if they start at the
+// exact same minute.
+function findConflict(teacherId, date, time, duration, excludeSessionId){
+  const endTime = addMinutesToTime(time, duration || 60);
+  return data.sessions.find(s=>{
+    if(s.id === excludeSessionId || s.teacherId !== teacherId || s.date !== date || s.status === 'delayed_moved') return false;
+    const sEnd = addMinutesToTime(s.time, s.duration || 60);
+    return timeRangesOverlap(time, endTime, s.time, sEnd);
+  });
+}
+
+// Unified availability check: returns null if the slot is free, otherwise
+// { type: 'session', session } or { type: 'block', block } describing why it's taken.
+// Every place that schedules or moves a session should go through this, so
+// teacher breaks/unavailable times are blocked exactly like double-booking is.
+function checkAvailability(teacherId, date, time, duration, excludeSessionId){
+  const sessionConflict = findConflict(teacherId, date, time, duration, excludeSessionId);
+  if(sessionConflict) return { type:'session', session: sessionConflict };
+  const endTime = addMinutesToTime(time, duration || 60);
+  const blockHit = blocksForTeacherOnDate(teacherId, date).find(b=>
+    b.startTime === b.endTime
+      ? (b.startTime >= time && b.startTime < endTime)
+      : timeRangesOverlap(time, endTime, b.startTime, b.endTime)
+  );
+  if(blockHit) return { type:'block', block: blockHit };
+  return null;
+}
+function availabilityMessage(conflict, teacherId, date, time){
+  if(conflict.type==='session'){
+    const s = conflict.session;
+    const sEnd = addMinutesToTime(s.time, s.duration || 60);
+    return `같은 시간에 타 학생이 있습니다. (${teacherName(teacherId)} 강사 · ${fmtDate(date)} ${s.time}~${sEnd} · ${studentName(s.studentId)} 학생)`;
+  }
+  const b = conflict.block;
+  const timeLabel = b.startTime===b.endTime ? b.startTime : `${b.startTime}~${b.endTime}`;
+  return `이 시간은 ${teacherName(teacherId)} 강사의 쉬는시간/불가시간입니다. (${fmtDate(date)} ${timeLabel}${b.label ? ' · '+b.label : ''})`;
+}
+
+// Recomputes a student's round numbers (1/N, 2/N ...) based on chronological
+// date+time order. Call this any time a student's sessions change date/time,
+// or a session is added/removed, so "n/N" always matches the actual schedule order.
+function renumberStudentRounds(studentId){
+  const sessions = data.sessions
+    .filter(s=>s.studentId===studentId)
+    .sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+  sessions.forEach((s, idx)=>{
+    s.round = idx+1;
+  });
+}
+
+// ABLE students attend continuously, so payment is tracked per due-point rather than
+// a lifetime total. Due points are round 1 (a brand-new student always pays at their
+// first class), then every cycle-th class after that: 1, cycle, 2*cycle, 3*cycle, ...
+// (e.g. cycle=4 → rounds 1, 4, 8, 12, 16...). Each of those rounds is tracked
+// INDEPENDENTLY in student.paidRounds, so marking round 4 paid never touches round 8's
+// status — they can both show as due/owed at the same time if that's genuinely the case.
+function isDueRound(cycle, round){
+  return round === 1 || round % cycle === 0;
+}
+
+// Lazily migrates older data (a single student.lastPaymentRound number) into the new
+// per-round paidRounds array, so nobody's already-recorded payments get lost.
+function normalizeStudentPayments(student){
+  if(!student.paidRounds){
+    const cycle = student.paymentCycle || 4;
+    const base = student.lastPaymentRound || 0;
+    const paid = [];
+    for(let r=1; r<=base; r++){
+      if(isDueRound(cycle, r)) paid.push(r);
+    }
+    student.paidRounds = paid;
+  }
+  return student.paidRounds;
+}
+
+function paymentCycleInfo(student, round){
+  const cycle = (student && student.paymentCycle) || 4;
+  const paidRounds = student ? normalizeStudentPayments(student) : [];
+  // Position always cycles 1..cycle based on the absolute round number, purely for display
+  // (e.g. "3/4"), independent of payment status.
+  const pos = ((round - 1) % cycle) + 1;
+  const due = isDueRound(cycle, round) && !paidRounds.includes(round);
+  return { pos, cycle, due };
+}
+
+// Finds the date of this student's EARLIEST unpaid due class, or null if none are
+// known yet (no sessions generated at all).
+function nextPaymentDate(student){
+  const cycle = student.paymentCycle || 4;
+  const paidRounds = normalizeStudentPayments(student);
+  const sessions = data.sessions.filter(s=>s.studentId===student.id).sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));
+  if(sessions.length===0) return null;
+  const lastKnownRound = sessions[sessions.length-1].round;
+  let targetRound = null;
+  for(let r=1; r<=lastKnownRound + cycle; r++){
+    if(isDueRound(cycle, r) && !paidRounds.includes(r)){ targetRound = r; break; }
+  }
+  if(targetRound===null) return null;
+  const exact = sessions.find(s=>s.round===targetRound);
+  if(exact) return exact.date;
+  // Not generated that far ahead yet (or a gap from a bulk reschedule) — estimate from
+  // the most recent known session, assuming the usual weekly cadence continues.
+  const last = sessions[sessions.length-1];
+  if(targetRound > last.round){
+    return addDays(last.date, (targetRound - last.round) * 7);
+  }
+  const after = sessions.find(s=>s.round >= targetRound);
+  return after ? after.date : null;
+}
+
+// Students whose payment is due today or already overdue (for the top reminder banner).
+// Respects the current role — a teacher only sees alerts for their own students.
+function getPaymentAlerts(){
+  const today = todayStr();
+  return visibleStudents()
+    .map(s=>({ student: s, dueDate: nextPaymentDate(s) }))
+    .filter(x=> x.dueDate && x.dueDate <= today)
+    .sort((a,b)=> a.dueDate.localeCompare(b.dueDate));
+}
+
+function paymentAlertBannerHtml(){
+  const alerts = getPaymentAlerts();
+  if(alerts.length===0) return '';
+  const today = todayStr();
+  return `
+    <div class="pay-banner">
+      <span class="pay-banner-icon">⭐</span>
+      <span class="pay-banner-title">결제 필요</span>
+      <span class="pay-banner-list">${alerts.map(a=>
+        `${a.student.name}${a.dueDate < today ? ' (지남!)' : ''}`
+      ).join(', ')}</span>
+    </div>
+  `;
+}
+
+// Lazily upgrades an older-format block (single weekday/date/time) to the current
+// shape (weekdays array, startDate/endDate, startTime/endTime). Safe to call repeatedly.
+function normalizeBlock(b){
+  if(!b.weekdays){
+    b.weekdays = (typeof b.weekday === 'number') ? [b.weekday] : [];
+  }
+  if(!b.startTime){
+    b.startTime = b.time || '00:00';
+    b.endTime = b.time || '00:00';
+  }
+  if(b.mode === 'once'){
+    b.mode = 'range';
+    b.startDate = b.date;
+    b.endDate = b.date;
+  }
+  return b;
+}
+
+// Returns this teacher's break/unavailable blocks that fall on the given date
+// (either a weekly-recurring block matching that weekday, or a date-range block covering that date).
+function blocksForTeacherOnDate(teacherId, dateStr){
+  const dow = weekdayOf(dateStr);
+  return data.blocks.filter(b=>{
+    normalizeBlock(b);
+    if(b.teacherId !== teacherId) return false;
+    if(b.mode === 'weekly') return b.weekdays.includes(dow);
+    if(b.mode === 'range') return dateStr >= b.startDate && dateStr <= b.endDate;
+    return false;
+  }).sort((a,b)=>a.startTime.localeCompare(b.startTime));
+}
+
+// Expands blocks into individual dates within a given month, for a given teacher
+// filter ('all' or a specific teacherId). Used by the Schedule list view so
+// breaks show up there too, not just the calendar.
+function expandBlocksForMonth(monthStr, teacherFilterId){
+  const [y, m] = monthStr.split('-').map(Number);
+  const total = daysInMonth(y, m);
+  const monthStartStr = `${monthStr}-01`;
+  const monthEndStr = `${monthStr}-${String(total).padStart(2,'0')}`;
+  const results = [];
+  data.blocks.forEach(b=>{
+    normalizeBlock(b);
+    if(teacherFilterId !== 'all' && b.teacherId !== teacherFilterId) return;
+    if(b.mode === 'range'){
+      const rangeStart = b.startDate < monthStartStr ? monthStartStr : b.startDate;
+      const rangeEnd = b.endDate > monthEndStr ? monthEndStr : b.endDate;
+      if(rangeStart > rangeEnd) return; // no overlap with this month
+      let cursor = rangeStart;
+      while(cursor <= rangeEnd){
+        results.push({ date: cursor, block: b });
+        cursor = addDays(cursor, 1);
+      }
+    } else if(b.mode === 'weekly'){
+      for(let day=1; day<=total; day++){
+        const dateStr = `${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        if(b.weekdays.includes(weekdayOf(dateStr))){
+          results.push({ date: dateStr, block: b });
+        }
+      }
+    }
+  });
+  return results;
+}
+
+// ---- rendering ----
+function render(){
+  // Teachers should never land on the admin-only "강사 관리" tab.
+  if(currentRole !== 'admin' && currentTab === 'teachers'){
+    currentTab = 'schedule';
+  }
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <header class="top">
+      <div class="brand">
+        <span class="mark">ABLE Management</span>
+        <span class="sub">연기·뮤지컬 학원 스케줄</span>
+      </div>
+      <div class="row" style="align-items:center; gap:8px">
+        <button class="btn small secondary" id="refreshDataBtn" title="다른 사람이 저장한 최신 내용 불러오기">🔄 새로고침</button>
+        <div class="role-select">
+          <label>보기 권한</label>
+          ${renderRoleSelect()}
+        </div>
+      </div>
+    </header>
+    <nav class="tabs">
+      <button data-tab="schedule" class="${currentTab==='schedule'?'active':''}">스케줄</button>
+      <button data-tab="timetable" class="${currentTab==='timetable'?'active':''}">시간표</button>
+      <button data-tab="students" class="${currentTab==='students'?'active':''}">학생 관리</button>
+      ${currentRole==='admin' ? `<button data-tab="teachers" class="${currentTab==='teachers'?'active':''}">강사 관리</button>` : ''}
+    </nav>
+    <div id="tabContent"></div>
+  `;
+  app.querySelectorAll('nav.tabs button').forEach(b=>{
+    b.onclick = ()=>{ currentTab = b.dataset.tab; render(); };
+  });
+  const refreshBtn = app.querySelector('#refreshDataBtn');
+  if(refreshBtn){
+    refreshBtn.onclick = async ()=>{
+      refreshBtn.disabled = true;
+      refreshBtn.textContent = '불러오는 중...';
+      await loadData();
+      toast('최신 데이터를 불러왔어요.');
+    };
+  }
+  const roleSel = app.querySelector('#roleSelect');
+  if(roleSel){
+    roleSel.onchange = (e)=>{
+      const target = e.target.value;
+      const previous = currentRole;
+      attemptRoleSwitch(target, ()=>{ /* success: already applied inside attemptRoleSwitch */ }, ()=>{
+        // revert the dropdown visually to the previous selection
+        e.target.value = previous;
+      });
+    };
+  }
+  const content = document.getElementById('tabContent');
+  if(currentTab==='schedule') content.innerHTML = '', renderSchedule(content);
+  if(currentTab==='timetable') content.innerHTML = '', renderTimetable(content);
+  if(currentTab==='students') content.innerHTML = '', renderStudents(content);
+  if(currentTab==='teachers') content.innerHTML = '', renderTeachers(content);
+}
+
+function renderRoleSelect(){
+  let opts = `<option value="admin" ${currentRole==='admin'?'selected':''}>관리자 (전체 보기)</option>`;
+  data.teachers.forEach(t=>{
+    opts += `<option value="${t.id}" ${currentRole===t.id?'selected':''}>${t.name} 강사 (본인만)</option>`;
+  });
+  return `<select id="roleSelect">${opts}</select>`;
+}
+
+// Returns the PIN required to switch into this role, or null if no lock is set.
+function requiredPinFor(target){
+  if(target === 'admin') return data.adminPin || null;
+  const teacher = data.teachers.find(t=>t.id===target);
+  return (teacher && teacher.pin) ? teacher.pin : null;
+}
+
+function attemptRoleSwitch(target, onSuccess, onCancel){
+  if(target === currentRole){ return; } // no-op
+  const neededPin = requiredPinFor(target);
+  if(!neededPin){
+    currentRole = target;
+    render();
+    if(onSuccess) onSuccess();
+    return;
+  }
+  const targetLabel = target === 'admin' ? '관리자' : teacherName(target) + ' 강사';
+  openPinModal(targetLabel, neededPin, ()=>{
+    currentRole = target;
+    render();
+    if(onSuccess) onSuccess();
+  }, onCancel);
+}
+
+function openSetPinModal(label, onSave){
+  const backdrop = document.getElementById('modalBackdrop');
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <h4>${label} 설정</h4>
+    <div class="muted">숫자 4자리 이상을 추천해요. 잊어버리지 않게 따로 적어두세요.</div>
+    <div class="field" style="margin-top:10px"><input type="text" id="newPinInput" inputmode="numeric" placeholder="새 PIN 입력"></div>
+    <div id="newPinWarn" class="warning-box"></div>
+    <div class="row" style="justify-content:flex-end; margin-top:10px">
+      <button class="btn secondary" id="newPinCancel">취소</button>
+      <button class="btn" id="newPinSave">저장</button>
+    </div>
+  `;
+  backdrop.classList.add('show');
+  const input = document.getElementById('newPinInput');
+  input.focus();
+  document.getElementById('newPinCancel').onclick = ()=> backdrop.classList.remove('show');
+  document.getElementById('newPinSave').onclick = ()=>{
+    const val = input.value.trim();
+    if(!val){
+      const warn = document.getElementById('newPinWarn');
+      warn.textContent = 'PIN을 입력해주세요.';
+      warn.style.display = 'block';
+      return;
+    }
+    backdrop.classList.remove('show');
+    onSave(val);
+  };
+}
+
+function openPinModal(targetLabel, correctPin, onSuccess, onCancel){
+  const backdrop = document.getElementById('modalBackdrop');
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <h4>${targetLabel} 잠금 해제</h4>
+    <div class="muted">비밀번호(PIN)를 입력해주세요.</div>
+    <div class="field" style="margin-top:10px"><input type="password" id="pinInput" inputmode="numeric" placeholder="PIN 입력" autofocus></div>
+    <div id="pinWarn" class="warning-box"></div>
+    <div class="row" style="justify-content:flex-end; margin-top:10px">
+      <button class="btn secondary" id="pinCancel">취소</button>
+      <button class="btn" id="pinOk">확인</button>
+    </div>
+  `;
+  backdrop.classList.add('show');
+  const input = document.getElementById('pinInput');
+  input.focus();
+  const cleanup = (didSucceed)=>{
+    backdrop.classList.remove('show');
+    if(!didSucceed && onCancel) onCancel();
+  };
+  document.getElementById('pinCancel').onclick = ()=> cleanup(false);
+  const tryConfirm = ()=>{
+    const val = input.value.trim();
+    if(val === correctPin){
+      cleanup(true);
+      onSuccess();
+    } else {
+      const warn = document.getElementById('pinWarn');
+      warn.textContent = 'PIN이 일치하지 않아요.';
+      warn.style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  };
+  document.getElementById('pinOk').onclick = tryConfirm;
+  input.onkeydown = (e)=>{ if(e.key === 'Enter') tryConfirm(); };
+}
+
+function visibleSessions(){
+  if(currentRole==='admin') return data.sessions;
+  return data.sessions.filter(s=>s.teacherId===currentRole);
+}
+function visibleStudents(){
+  if(currentRole==='admin') return data.students;
+  // A teacher should see a student if they're the default teacher OR they teach
+  // at least one of that student's sessions (multi-teacher students).
+  const idsFromSessions = new Set(data.sessions.filter(s=>s.teacherId===currentRole).map(s=>s.studentId));
+  return data.students.filter(s=> s.teacherId===currentRole || idsFromSessions.has(s.id));
+}
+
+// ---------------- SCHEDULE TAB ----------------
+function renderSchedule(root){
+  if(currentRole !== 'admin'){
+    scheduleTeacherFilter = currentRole; // teachers only ever see their own
+  }
+
+  const teacherChips = currentRole === 'admin' ? `
+    <div class="row" style="margin-bottom:4px">
+      <button class="btn small ${scheduleTeacherFilter==='all' ? '' : 'secondary'}" data-teacher-filter="all">전체</button>
+      ${data.teachers.map(t=>`<button class="btn small ${scheduleTeacherFilter===t.id ? '' : 'secondary'}" data-teacher-filter="${t.id}">${t.name}</button>`).join('')}
+    </div>
+  ` : '';
+
+  const [my, mm] = scheduleMonthFilter.split('-').map(Number);
+  const monthLabel = `${my}년 ${mm}월`;
+
+  let html = paymentAlertBannerHtml() + `
+    <div class="panel">
+      <div class="row" style="justify-content:space-between; align-items:center; flex-wrap:wrap">
+        <h3 style="margin:0">전체 스케줄 ${currentRole!=='admin' ? '· ' + teacherName(currentRole) + ' 강사만 보기' : ''}</h3>
+        <div class="field" style="margin:0">
+          <input id="scheduleSearch" placeholder="학생 이름으로 찾기" value="${scheduleSearchQuery.replace(/"/g,'&quot;')}" style="min-width:220px; border:1px solid var(--line); border-radius:8px; padding:8px 10px;">
+        </div>
+      </div>
+      ${teacherChips}
+      <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:6px">
+        <div style="font-weight:700; color:var(--navy)">${monthLabel}</div>
+        <div class="week-nav">
+          <button class="btn small secondary" id="schedPrevMonthBtn">◀ 이전달</button>
+          <button class="btn small secondary" id="schedThisMonthBtn">이번달</button>
+          <button class="btn small secondary" id="schedNextMonthBtn">다음달 ▶</button>
+        </div>
+      </div>
+      <div id="scheduleResults"></div>
+    </div>
+  `;
+  root.innerHTML = html;
+  const searchInput = document.getElementById('scheduleSearch');
+  searchInput.oninput = (e)=>{ scheduleSearchQuery = e.target.value; updateScheduleResults(); };
+  root.querySelectorAll('[data-teacher-filter]').forEach(btn=>{
+    btn.onclick = ()=>{ scheduleTeacherFilter = btn.dataset.teacherFilter; render(); };
+  });
+  document.getElementById('schedPrevMonthBtn').onclick = ()=>{ scheduleMonthFilter = addMonths(scheduleMonthFilter,-1); render(); };
+  document.getElementById('schedThisMonthBtn').onclick = ()=>{ scheduleMonthFilter = todayStr().slice(0,7); render(); };
+  document.getElementById('schedNextMonthBtn').onclick = ()=>{ scheduleMonthFilter = addMonths(scheduleMonthFilter,1); render(); };
+  updateScheduleResults();
+}
+
+function updateScheduleResults(){
+  const container = document.getElementById('scheduleResults');
+  if(!container) return;
+  const query = scheduleSearchQuery.trim().toLowerCase();
+
+  const sessions = visibleSessions()
+    .filter(s => s.status !== 'delayed_moved')
+    .filter(s => scheduleTeacherFilter === 'all' || s.teacherId === scheduleTeacherFilter)
+    .filter(s => s.date.slice(0,7) === scheduleMonthFilter)
+    .filter(s => !query || studentName(s.studentId).toLowerCase().includes(query));
+
+  const blockEntries = query ? [] : expandBlocksForMonth(scheduleMonthFilter, scheduleTeacherFilter);
+
+  const byDate = {};
+  sessions.forEach(s=>{
+    byDate[s.date] = byDate[s.date] || [];
+    byDate[s.date].push({ type:'session', time:s.time, s });
+  });
+  blockEntries.forEach(({date, block})=>{
+    byDate[date] = byDate[date] || [];
+    byDate[date].push({ type:'block', time:block.startTime, block });
+  });
+  const dates = Object.keys(byDate).sort();
+
+  let html = '';
+  if(dates.length===0){
+    html += query
+      ? `<div class="empty">"${scheduleSearchQuery}" 학생의 수업을 이 달에서 찾을 수 없어요.</div>`
+      : `<div class="empty">이 달에는 등록된 수업이 없어요. 다른 달을 확인해보거나, '학생 관리'에서 신규 학생을 등록해보세요.</div>`;
+  } else {
+    dates.forEach(d=>{
+      html += `<div class="day-group"><div class="day-title">${fmtDate(d)}</div><table><thead><tr>
+        <th>시간</th><th>학생</th><th>과목</th><th>회차</th><th>담당강사</th><th>상태</th><th>처리</th>
+      </tr></thead><tbody>`;
+      byDate[d].sort((a,b)=>a.time.localeCompare(b.time)).forEach(item=>{
+        html += item.type==='block' ? renderBlockRow(item.block, d) : renderSessionRow(item.s);
+      });
+      html += `</tbody></table></div>`;
+    });
+  }
+  container.innerHTML = html;
+  container.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.onclick = ()=> handleSessionAction(btn.dataset.action, btn.dataset.id);
+  });
+  container.querySelectorAll('[data-del-block-row]').forEach(btn=>{
+    btn.onclick = ()=>{
+      openConfirmModal('이 쉬는시간을 삭제할까요?', ()=>{
+        data.blocks = data.blocks.filter(b=>b.id!==btn.dataset.delBlockRow);
+        saveData(); render(); toast('삭제했어요.');
+      });
+    };
+  });
+}
+
+// ---------------- TIMETABLE TAB ----------------
+function renderTimetable(root){
+  const teachers = data.teachers;
+  // decide which teacher's calendar to show
+  if(currentRole !== 'admin'){
+    timetableTeacherId = currentRole;
+  } else if(!timetableTeacherId || !teachers.find(t=>t.id===timetableTeacherId)){
+    timetableTeacherId = teachers.length ? teachers[0].id : null;
+  }
+
+  const [y, m] = currentMonth.split('-').map(Number);
+  const monthLabel = `${y}년 ${m}월`;
+
+  let html = paymentAlertBannerHtml() + `
+    <div class="panel">
+      <div class="row" style="justify-content:space-between; align-items:center; flex-wrap:wrap">
+        <div class="row" style="align-items:center">
+          <h3 style="margin:0 10px 0 0">${monthLabel}</h3>
+          ${currentRole==='admin' ? `
+            <select id="ttTeacherSelect">
+              ${teachers.map(t=>`<option value="${t.id}" ${t.id===timetableTeacherId?'selected':''}>${t.name} 강사</option>`).join('')}
+            </select>
+          ` : `<span class="muted">${teacherName(currentRole)} 강사</span>`}
+        </div>
+        <div class="week-nav">
+          <button class="btn small secondary" id="prevMonthBtn">◀ 이전달</button>
+          <button class="btn small secondary" id="thisMonthBtn">이번달</button>
+          <button class="btn small secondary" id="nextMonthBtn">다음달 ▶</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  if(teachers.length===0){
+    html += `<div class="panel"><div class="empty">강사를 먼저 등록해주세요.</div></div>`;
+  } else if(!timetableTeacherId){
+    html += `<div class="panel"><div class="empty">강사를 선택해주세요.</div></div>`;
+  } else {
+    const sessions = data.sessions.filter(s=>
+      s.teacherId===timetableTeacherId && s.status!=='delayed_moved' && s.date.slice(0,7)===currentMonth
+    );
+    const byDate = {};
+    sessions.forEach(s=>{ (byDate[s.date] = byDate[s.date] || []).push(s); });
+    Object.values(byDate).forEach(list=> list.sort((a,b)=>a.time.localeCompare(b.time)));
+
+    const totalDays = daysInMonth(y, m);
+    const leadBlanks = firstWeekdayOfMonth(y, m);
+    const cells = [];
+    for(let i=0;i<leadBlanks;i++) cells.push(null);
+    for(let day=1; day<=totalDays; day++) cells.push(`${y}-${String(m).padStart(2,'0')}-${String(day).padStart(2,'0')}`);
+    while(cells.length % 7 !== 0) cells.push(null);
+
+    const dayNames = ['일','월','화','수','목','금','토'];
+    html += `<div class="panel"><h3>${teacherName(timetableTeacherId)} 강사 · ${monthLabel} 시간표</h3>
+      <div class="cal-grid cal-head">${dayNames.map(dn=>`<div class="cal-daylabel">${dn}</div>`).join('')}</div>
+      <div class="cal-grid">`;
+    cells.forEach(dateStr=>{
+      if(!dateStr){ html += `<div class="cal-cell empty-cell"></div>`; return; }
+      const dayNum = parseInt(dateStr.slice(8,10),10);
+      const isToday = dateStr === todayStr();
+      const list = byDate[dateStr] || [];
+      const blocks = blocksForTeacherOnDate(timetableTeacherId, dateStr);
+      const dow = weekdayOf(dateStr);
+      const holiday = holidayLabel(dateStr);
+      const dayLabelClass = holiday ? 'holiday' : (dow===0 ? 'sunday' : '');
+      const combined = [
+        ...list.map(s=>({ type:'session', time:s.time, s })),
+        ...blocks.map(b=>({ type:'block', time:b.startTime, b })),
+      ].sort((a,b)=>a.time.localeCompare(b.time));
+      html += `<div class="cal-cell ${isToday?'today':''}">
+        <div class="cal-daynum ${dayLabelClass}" ${holiday?`title="${holiday}"`:''}>${dayNum} (${dayNames[dow]})${holiday?` <span class="holiday-tag">${holiday}</span>`:''}</div>
+        ${combined.map(item=>{
+          if(item.type==='block'){
+            const b = item.b;
+            const timeLabel = b.startTime===b.endTime ? b.startTime : `${b.startTime}~${b.endTime}`;
+            return `<div class="tt-cell blocked" data-block-id="${b.id}">${timeLabel} ${b.label||'쉬는시간'}</div>`;
+          }
+          const s = item.s;
+          const cls = s.status==='completed' ? 'completed' : (s.status==='noshow' ? 'noshow' : '');
+          const student = data.students.find(x=>x.id===s.studentId);
+          const abbr = subjectAbbr(student);
+          const pc = paymentCycleInfo(student, s.round);
+          const dueCls = pc.due ? ' pay-due' : '';
+          const duePrefix = pc.due ? '⭐결제! ' : '';
+          return `<div class="tt-cell ${cls}${dueCls}" data-session-id="${s.id}">${duePrefix}${s.time} ${studentName(s.studentId)}${abbr?' '+abbr:''} ${pc.pos}/${pc.cycle}</div>`;
+        }).join('')}
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  root.innerHTML = html;
+  const teacherSel = document.getElementById('ttTeacherSelect');
+  if(teacherSel){ teacherSel.onchange = (e)=>{ timetableTeacherId = e.target.value; render(); }; }
+  document.getElementById('prevMonthBtn').onclick = ()=>{ currentMonth = addMonths(currentMonth,-1); render(); };
+  document.getElementById('thisMonthBtn').onclick = ()=>{ currentMonth = todayStr().slice(0,7); render(); };
+  document.getElementById('nextMonthBtn').onclick = ()=>{ currentMonth = addMonths(currentMonth,1); render(); };
+  root.querySelectorAll('.tt-cell[data-session-id]').forEach(cell=>{
+    cell.onclick = ()=> openSessionQuickView(cell.dataset.sessionId);
+  });
+}
+
+function openSessionQuickView(id){
+  const s = data.sessions.find(x=>x.id===id);
+  if(!s) return;
+  const student = data.students.find(x=>x.id===s.studentId);
+  const pc = paymentCycleInfo(student, s.round);
+  const statusLabel = {scheduled:'예정', completed:'완료', noshow:'당취'}[s.status] || s.status;
+  const backdrop = document.getElementById('modalBackdrop');
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `
+    <h4>${studentName(s.studentId)} · ${pc.pos}/${pc.cycle}${pc.due ? ' <span class="pay-tag">결제!</span>' : ''}</h4>
+    <div class="muted">${fmtDate(s.date)} ${s.time} · ${teacherName(s.teacherId)} 강사 · 상태: ${statusLabel}</div>
+    <div class="divider"></div>
+    <div class="actions-cell">${actionButtonsHTML(s)}</div>
+    <div class="row" style="justify-content:flex-end; margin-top:14px">
+      <button class="btn secondary" id="mCancel">닫기</button>
+    </div>
+  `;
+  backdrop.classList.add('show');
+  document.getElementById('mCancel').onclick = ()=> backdrop.classList.remove('show');
+  body.querySelectorAll('[data-action]').forEach(btn=>{
+    btn.onclick = ()=>{
+      backdrop.classList.remove('show');
+      handleSessionAction(btn.dataset.action, btn.dataset.id);
+    };
+  });
+}
+
+function actionButtonsHTML(s){
+  const student = data.students.find(x=>x.id===s.studentId);
+  const cycle = (student && student.paymentCycle) || 4;
+  const pc = paymentCycleInfo(student, s.round);
+  const alreadyPaidHere = student && isDueRound(cycle, s.round) && !pc.due;
+  let actions = '';
+  if(s.status === 'scheduled'){
+    actions += `<button class="btn small secondary" data-action="complete" data-id="${s.id}">완료</button>`;
+    actions += `<button class="btn small secondary" data-action="edit" data-id="${s.id}">시간변경</button>`;
+    actions += `<button class="btn small danger" data-action="noshow" data-id="${s.id}">당취</button>`;
+  }
+  if(s.status === 'completed' || s.status === 'noshow'){
+    actions += `<button class="btn small secondary" data-action="edit" data-id="${s.id}">시간변경</button>`;
+    actions += `<button class="btn small secondary" data-action="revert" data-id="${s.id}">되돌리기</button>`;
+  }
+  if(pc.due){
+    actions += `<button class="btn small warn" data-action="markpaid" data-id="${s.id}">⭐ 결제완료</button>`;
+  }
+  if(alreadyPaidHere){
+    actions += `<button class="btn small secondary" data-action="unmarkpaid" data-id="${s.id}">결제완료 취소</button>`;
+  }
+  actions += `<button class="btn small danger" data-action="delete" data-id="${s.id}">삭제</button>`;
+  return actions;
+}
+
+function renderSessionRow(s){
+  const statusMap = {
+    scheduled: ['예정','scheduled'],
+    completed: ['완료','completed'],
+    noshow: ['당취','noshow'],
+  };
+  const [label, cls] = statusMap[s.status] || ['예정','scheduled'];
+  const student = data.students.find(x=>x.id===s.studentId);
+  const pc = paymentCycleInfo(student, s.round);
+  const rowStyle = pc.due ? ' style="background:#FFF6DC"' : '';
+
+  return `<tr${rowStyle}>
+    <td>${s.time}</td>
+    <td>${pc.due ? '<span class="pay-tag">⭐결제! </span>' : ''}${studentName(s.studentId)}</td>
+    <td>${subjectLabelsFull(student)}</td>
+    <td>${pc.pos}/${pc.cycle}</td>
+    <td>${teacherName(s.teacherId)}</td>
+    <td><span class="badge ${cls}">${label}</span></td>
+    <td class="actions-cell">${actionButtonsHTML(s)}</td>
+  </tr>`;
+}
+
+function renderBlockRow(b, dateStr){
+  normalizeBlock(b);
+  const repeatNote = b.mode==='weekly' ? '매주 반복' : '기간 지정';
+  const timeLabel = b.startTime===b.endTime ? b.startTime : `${b.startTime}~${b.endTime}`;
+  return `<tr style="background:#F7FAFE">
+    <td>${timeLabel}</td>
+    <td colspan="2"><i>${b.label || '쉬는시간'}</i> <span class="muted">(${repeatNote})</span></td>
+    <td>-</td>
+    <td>${teacherName(b.teacherId)}</td>
+    <td><span class="badge blocked">불가시간</span></td>
+    <td class="actions-cell"><button class="btn small danger" data-del-block-row="${b.id}">삭제</button></td>
+  </tr>`;
+}
+
+function handleSessionAction(action, id){
+  const session = data.sessions.find(s=>s.id===id);
+  if(!session) return;
+
+  if(action==='delete'){
+    openConfirmModal('이 수업을 스케줄에서 삭제할까요?', ()=>{
+      const studentId = session.studentId;
+      data.sessions = data.sessions.filter(s=>s.id!==id);
+      renumberStudentRounds(studentId);
+      saveData(); render(); toast('삭제했어요. 남은 회차 번호도 날짜순으로 다시 정리했어요.');
+    });
+    return;
+  }
+  if(action==='complete'){
+    session.status='completed'; saveData(); render(); toast('완료 처리했어요.');
+    return;
+  }
+  if(action==='noshow'){
+    session.status='noshow'; saveData(); render(); toast('당취로 표시했어요.');
+    return;
+  }
+  if(action==='revert'){
+    session.status='scheduled'; saveData(); render(); toast('예정 상태로 되돌렸어요.');
+    return;
+  }
+  if(action==='markpaid'){
+    const student = data.students.find(x=>x.id===session.studentId);
+    if(student){
+      // Mark exactly this round paid, independent of any other round — so 4회차 and
+      // 8회차 (etc.) each keep their own status and one never affects the other.
+      const paid = normalizeStudentPayments(student);
+      if(!paid.includes(session.round)) paid.push(session.round);
+      saveData(); render(); toast(`${student.name} 학생 ${session.round}회차 결제완료로 표시했어요.`);
+    }
+    return;
+  }
+  if(action==='unmarkpaid'){
+    const student = data.students.find(x=>x.id===session.studentId);
+    if(student){
+      const paid = normalizeStudentPayments(student);
+      const idx = paid.indexOf(session.round);
+      if(idx !== -1) paid.splice(idx, 1);
+      saveData(); render(); toast(`${student.name} 학생 ${session.round}회차 결제완료를 취소했어요.`);
+    }
+    return;
+  }
+  if(action==='edit'){
+    openEditModal(session);
+    return;
+  }
+}
+
+function openConfirmModal(msg, onConfirm){
+  const backdrop = document.getElementById('modalBackdrop');
+  const body = document.getElementById('modalBody');
+  body.innerHTML = `<h4>확인</h4><p>${msg}</p>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn secondary" id="mCancel">취소</button>
+      <button class="btn danger" id="mOk">삭제</button>
+    </div>`;
+  backdrop.classList.add('show');
+  document.getElementById('mCancel').onclick = ()=> backdrop.classList.remove('show');
+  document.getElementById('mOk').onclick = ()=>{ backdrop.classList.remove('show'); onConfirm(); };
+}
+
+function openEditModal(session){
+  const backdrop = document.getElementById('modalBackdrop');
+  const body = document.getElementById('modalBody');
+  const editStudent = data.students.find(x=>x.id===session.studentId);
+  const editPc = paymentCycleInfo(editStudent, session.round);
+  body.innerHTML = `
+    <h4>수업 시간 변경</h4>
+    <div class="muted">${studentName(session.studentId)} · ${editPc.pos}/${editPc.cycle}회차</div>
+    <div class="divider"></div>
+    <div class="field"><label>날짜</label><input type="date" id="editDate" value="${session.date}"></div>
+    <div class="field"><label>시간</label><input type="time" id="editTime" value="${session.time}"></div>
+    <div class="field"><label>수업시간(분)</label><input type="number" id="editDuration" min="10" step="5" value="${session.duration||50}" style="width:90px"></div>
+    <div id="editWarn" class="warning-box"></div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn secondary" id="mCancel">취소</button>
+      <button class="btn" id="mSave">저장</button>
+    </div>
+  `;
+  backdrop.classList.add('show');
+  document.getElementById('mCancel').onclick = ()=> backdrop.classList.remove('show');
+  document.getElementById('mSave').onclick = ()=>{
+    const newDate = document.getElementById('editDate').value;
+    const newTime = document.getElementById('editTime').value;
+    const newDuration = parseInt(document.getElementById('editDuration').value,10) || 50;
+    const conflict = checkAvailability(session.teacherId, newDate, newTime, newDuration, session.id);
+    const warn = document.getElementById('editWarn');
+    if(conflict){
+      const msg = availabilityMessage(conflict, session.teacherId, newDate, newTime);
+      warn.textContent = msg;
+      warn.style.display='block';
+      alert(msg);
+      return;
+    }
+    session.date = newDate; session.time = newTime; session.duration = newDuration;
+    renumberStudentRounds(session.studentId);
+    saveData();
+    backdrop.classList.remove('show');
+    render();
+    toast('수업 시간이 변경됐어요. 회차 번호도 날짜순으로 자동 정리됐어요.');
+  };
+}
+
+// ---------------- STUDENTS TAB ----------------
+const ROLLING_WEEKS = 52; // default weeks of classes to auto-generate at once — students can register for a full year
+
+function renderStudents(root){
+  const registrationPanelHtml = currentRole !== 'admin' ? '' : `
+    <div class="panel">
+      <h3>신규 학생 등록 (매주 같은 시간에 계속 다니는 걸 기준으로 만들어요)</h3>
+      <div id="regWarning" class="warning-box"></div>
+      <div class="row">
+        <div class="field"><label>이름</label><input id="regName" placeholder="학생 이름"></div>
+        <div class="field"><label>나이</label><input id="regAge" placeholder="예: 27" style="width:80px"></div>
+        <div class="field">
+          <label>성별</label>
+          <select id="regGender">
+            <option value="unknown">성별모름</option>
+            <option value="male">남</option>
+            <option value="female">여</option>
+          </select>
+        </div>
+        <div class="field"><label>담당 강사</label><select id="regTeacher">${teacherOptions()}</select></div>
+      </div>
+      <div class="field grow" style="margin-bottom:10px">
+        <label>과목 (여러 개 선택 가능)</label>
+        ${subjectCheckboxesHtml([], 'regSubjectChk')}
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>주당 횟수</label>
+          <select id="regSlotsCount">
+            <option value="1" selected>주 1회</option>
+            <option value="2">주 2회</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>수업시간</label>
+          <select id="regDuration">
+            <option value="50" selected>50분</option>
+            <option value="80">80분</option>
+            <option value="90">90분</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>결제주기</label>
+          <select id="regPaymentCycle">
+            <option value="4">4회</option>
+            <option value="8">8회</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>몇 주치 만들까요?</label>
+          <select id="regWeeksCount">
+            <option value="20">20주 (약 5개월)</option>
+            <option value="26">26주 (약 6개월)</option>
+            <option value="52" selected>52주 (1년)</option>
+            <option value="104">104주 (2년)</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" id="regSlot1Row">
+        <div class="field"><label>시작일</label><input id="regStart" type="date" value="${todayStr()}"></div>
+        <div class="field"><label>시간</label><input id="regTime" type="time" value="15:00"></div>
+      </div>
+      <div class="row" id="regSlot2Row" style="display:none">
+        <div class="field"><label>2번째 요일 시작일</label><input id="regStart2" type="date" value="${todayStr()}"></div>
+        <div class="field"><label>2번째 시간</label><input id="regTime2" type="time" value="15:00"></div>
+      </div>
+      <div class="row">
+        <div class="field" style="justify-content:flex-end"><label>&nbsp;</label>
+          <button class="btn" id="regBtn">등록</button>
+        </div>
+      </div>
+      <div class="muted">주 2회 다니는 학생(예: 8회 결제주기 학생이 보통 이렇게 다녀요)은 '주당 횟수'에서 2회를 고르면 요일·시간을 각각 따로 입력할 수 있어요. 예: 월요일 15시 + 목요일 17시. 두 슬롯이 합쳐져서 회차가 날짜순으로 이어져요 (1,2,3,4...).</div>
+      <div class="muted">연기오디션처럼 같은 과목인데 50분/80분 두 가지 길이로 나뉘는 경우, 수업시간만 다르게 골라서 각각 등록하면 돼요. 그 이후로도 계속 다니면 학생 목록에서 '회차 연장'으로 더 이어서 만들면 돼요. 그만 다니면 그냥 삭제하면 돼요.</div>
+      <div class="muted" style="margin-top:8px">
+        <button class="btn small secondary" id="demoPayBtn" type="button">⭐ 결제 배너 테스트용 학생 만들기</button>
+        결제일이 오늘인 임시 학생을 하나 만들어서, 스케줄/시간표 탭 상단에 배너가 뜨는 걸 바로 확인할 수 있어요. 확인 후 학생 목록에서 삭제하시면 돼요.
+      </div>
+    </div>
+  `;
+
+  let html = registrationPanelHtml + `
+    <div class="panel">
+      <div class="row" style="justify-content:space-between; align-items:center; flex-wrap:wrap">
+        <h3 style="margin:0">학생 목록 ${currentRole!=='admin' ? '· ' + teacherName(currentRole) + ' 강사만 보기' : ''}</h3>
+        <div class="field" style="margin:0">
+          <input id="studentSearch" placeholder="학생 이름으로 찾기" value="${studentSearchQuery.replace(/"/g,'&quot;')}" style="min-width:200px; border:1px solid var(--line); border-radius:8px; padding:8px 10px;">
+        </div>
+      </div>
+      <div id="studentListResults"></div>
+    </div>
+  `;
+  root.innerHTML = html;
+  const studentSearchInput = document.getElementById('studentSearch');
+  if(studentSearchInput){
+    studentSearchInput.oninput = (e)=>{ studentSearchQuery = e.target.value; updateStudentListResults(); };
+  }
+  updateStudentListResults();
+
+  if(currentRole === 'admin'){
+    document.getElementById('regBtn').onclick = onRegisterStudent;
+    const regSlotsCountSel = document.getElementById('regSlotsCount');
+    if(regSlotsCountSel){
+      regSlotsCountSel.onchange = (e)=>{
+        document.getElementById('regSlot2Row').style.display = e.target.value==='2' ? 'flex' : 'none';
+      };
+    }
+    const demoPayBtn = document.getElementById('demoPayBtn');
+    if(demoPayBtn){
+      demoPayBtn.onclick = ()=>{
+        if(data.teachers.length===0){ toast('먼저 강사를 1명 이상 등록해주세요.'); return; }
+        const teacherId = data.teachers[0].id;
+        const cycle = 4;
+        // Pick a start date so that the 4th weekly class lands on today.
+        const start = addDays(todayStr(), -21);
+        const time = '19:30'; // late slot, unlikely to collide with real classes
+        let attempt = 0;
+        let usedTime = time;
+        // nudge the time forward in 5-min steps if it happens to collide with something real
+        while(attempt < 20){
+          const conflicts = [0,1,2,3].some(i=> checkAvailability(teacherId, addDays(start, i*7), usedTime, 30, null));
+          if(!conflicts) break;
+          usedTime = addMinutesToTime(usedTime, 5);
+          attempt++;
+        }
+        const student = {
+          id: uid(), name: '결제테스트생', teacherId, subjects: [], gender: 'unknown',
+          paymentCycle: cycle, paidRounds: [], detail: {}
+        };
+        const sessions = generateWeeklySessions(student.id, teacherId, start, usedTime, 30, 1, 4);
+        data.students.push(student);
+        data.sessions.push(...sessions);
+        saveData();
+        render();
+        toast('결제일이 오늘인 "결제테스트생"을 만들었어요. 스케줄/시간표 탭 상단을 확인해보세요!');
+      };
+    }
+  }
+}
+
+function updateStudentListResults(){
+  const container = document.getElementById('studentListResults');
+  if(!container) return;
+  const students = visibleStudents();
+  const query = studentSearchQuery.trim().toLowerCase();
+  const filteredStudents = students.filter(s=> !query || s.name.toLowerCase().includes(query));
+
+  let html = '';
+  if(students.length===0){
+    html = `<div class="empty">등록된 학생이 없어요.</div>`;
+  } else if(filteredStudents.length===0){
+    html = `<div class="empty">"${studentSearchQuery}" 학생을 찾을 수 없어요.</div>`;
+  } else {
+    html = `<table><thead><tr>
+      <th>이름</th><th>담당강사</th><th>과목</th><th>결제주기</th><th>다음 결제일</th><th>등록한 수업시간</th><th>관리</th>
+    </tr></thead><tbody>`;
+    filteredStudents.forEach(s=>{
+      const hasDetail = s.detail && Object.values(s.detail).some(v=>v && v.trim());
+      const genderTag = s.gender==='male' ? ' (남)' : s.gender==='female' ? ' (여)' : '';
+      const dueDate = nextPaymentDate(s);
+      const isOverdue = dueDate && dueDate < todayStr();
+      const dueLabel = dueDate
+        ? `<span class="${isOverdue?'pay-tag':''}">${fmtDate(dueDate)}${isOverdue?' (지남!)':''}</span>`
+        : `<span class="muted">회차 더 필요</span>`;
+      html += `<tr>
+        <td><button class="btn small secondary" data-view-student="${s.id}" style="font-weight:700">${s.name}${genderTag}${hasDetail?' 📝':''}</button></td>
+        <td>${teacherName(s.teacherId)}</td>
+        <td>${subjectLabelsFull(s)}</td>
+        <td>${s.paymentCycle||4}회</td>
+        <td>${dueLabel}</td>
+        <td>${studentScheduleSummary(s.id)}</td>
+        <td class="actions-cell">
+          <button class="btn small secondary" data-edit-student="${s.id}">수정</button>
+          <button class="btn small danger" data-del-student="${s.id}">삭제</button>
+        </td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  container.innerHTML = html;
+  container.querySelectorAll('[data-view-student]').forEach(btn=>{
+    btn.onclick = ()=> openStudentDetailModal(btn.dataset.viewStudent);
+  });
+  container.querySelectorAll('[data-edit-student]').forEach(btn=>{
+    btn.onclick = ()=> openStudentEditModal(btn.dataset.editStudent);
+  });
+  container.querySelectorAll('[data-del-student]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.delStudent;
+      openConfirmModal('이 학생과 관련된 모든 스케줄도 함께 삭제돼요. 계속할까요?', ()=>{
+        data.students = data.students.filter(s=>s.id!==id);
+        data.sessions = data.sessions.filter(s=>s.studentId!==id);
+        saveData(); render(); toast('학생을 삭제했어요.');
+      });
+    };
+  });
+}
+
+const STUDENT_DETAIL_GROUPS = [
+  {
+    name: '학생 정보',
+    fields: [
+      { key: 'age', label: '나이', type: 'text', placeholder: '예: 27' },
+      { key: 'lectureNeeds', label: '수업니즈', type: 'textarea' },
+      { key: 'specialNotes', label: '특이사항', type: 'textarea' },
+      { key: 'paymentInfo', label: '결제 및 원서', type: 'textarea' },
+    ]
+  },
+];
+// flat list, used for reading/writing all keys regardless of group
+const STUDENT_DETAIL_FIELDS = STUDENT_DETAIL_GROUPS.flatMap(g=>g.fields);
+
+function renderDetailFieldHtml(f, detail){
+  return `
+    <div class="field">
+      <label>${f.label}</label>
+      ${f.type==='textarea'
+        ? `<textarea id="detail_${f.key}" rows="2" style="border:1px solid var(--line); border-radius:8px; padding:8px 10px; font-family:inherit; font-size:13px; resize:vertical;">${detail[f.key]||''}</textarea>`
+        : `<input type="${f.type}" id="detail_${f.key}" placeholder="${f.placeholder||''}" value="${detail[f.key]||''}">`
+      }
+    </div>
+  `;
+}
+
+function openStudentDetailModal(studentId){
+  const student = data.students.find(s=>s.id===studentId);
+  if(!student) return;
+  const detail = student.detail || {};
+  const backdrop = document.getElementById('modalBackdrop');
+  const body = document.getElementById('modalBody');
+  let selectedGender = student.gender || 'unknown';
+
+  const groupsToShow = STUDENT_DETAIL_GROUPS;
+
+  const genderOptions = [
+    { value:'male', label:'남' },
+    { value:'female', label:'여' },
+    { value:'unknown', label:'성별모름' },
+  ];
+
+  body.innerHTML = `
+    <h4>${student.name} · 상세정보</h4>
+    <div class="muted">${teacherName(student.teacherId)} 강사 · 결제주기 ${student.paymentCycle||4}회 · 과목: ${subjectLabelsFull(student)}</div>
+    <div class="row" style="gap:6px; margin-top:8px" id="genderChips">
+      ${genderOptions.map(g=>`<button type="button" class="btn small ${selectedGender===g.value?'':'secondary'}" data-gender="${g.value}">${g.label}</button>`).join('')}
+    </div>
+    <div class="divider"></div>
+    ${groupsToShow.map(g=>`
+      <div style="margin-bottom:10px">
+        ${g.fields.map(f=>renderDetailFieldHtml(f, detail)).join('')}
+      </div>
+    `).join('')}
+    <div class="row" style="justify-content:flex-end; margin-top:10px">
+      <button class="btn secondary" id="mCancel">닫기</button>
+      <button class="btn" id="mSave">저장</button>
+    </div>
+  `;
+  backdrop.classList.add('show');
+  document.getElementById('mCancel').onclick = ()=> backdrop.classList.remove('show');
+  document.querySelectorAll('#genderChips [data-gender]').forEach(btn=>{
+    btn.onclick = ()=>{
+      selectedGender = btn.dataset.gender;
+      document.querySelectorAll('#genderChips [data-gender]').forEach(b=>{
+        b.classList.toggle('secondary', b.dataset.gender !== selectedGender);
+      });
+    };
+  });
+  document.getElementById('mSave').onclick = ()=>{
+    const newDetail = { ...detail };
+    groupsToShow.forEach(g=>{
+      g.fields.forEach(f=>{
+        newDetail[f.key] = document.getElementById(`detail_${f.key}`).value.trim();
+      });
+    });
+    student.detail = newDetail;
+    student.gender = selectedGender;
+    saveData();
+    backdrop.classList.remove('show');
+    render();
+    toast('학생 상세정보를 저장했어요.');
+  };
+}
+
+function openStudentEditModal(studentId){
+  const student = data.students.find(s=>s.id===studentId);
+  if(!student) return;
+  const backdrop = document.getElementById('modalBackdrop');
+  const body = document.getElementById('modalBody');
+  const sessions = data.sessions
+    .filter(s=>s.studentId===studentId)
+    .sort((a,b)=> (a.date+a.time).localeCompare(b.date+b.time));
+
+  const dueDate = nextPaymentDate(student);
+  const lastSession = sessions[sessions.length-1];
+
+  body.innerHTML = `
+    <h4>학생 정보 수정</h4>
+    <div class="field"><label>이름</label><input id="editStuName" value="${student.name}"></div>
+    <div class="field"><label>기본 담당 강사</label><select id="editStuTeacher">${teacherOptions(student.teacherId)}</select></div>
+    <div class="field"><label>결제주기</label>
+      <select id="editStuCycle">
+        <option value="4" ${(student.paymentCycle||4)===4?'selected':''}>4회</option>
+        <option value="8" ${(student.paymentCycle||4)===8?'selected':''}>8회</option>
+      </select>
+    </div>
+    <div class="field grow" style="margin-bottom:4px">
+      <label>과목</label>
+      ${subjectCheckboxesHtml(student.subjects || [], 'editStuSubjectChk')}
+    </div>
+    <div class="divider"></div>
+    <div class="muted" style="font-weight:700; margin-bottom:4px">결제</div>
+    <div class="muted" style="margin-bottom:8px">다음 결제일: <b>${dueDate ? fmtDate(dueDate) : '회차를 더 생성해야 확인 가능'}</b></div>
+    <button class="btn secondary" id="markPaidBtn" type="button">결제완료로 표시 (기준 리셋)</button>
+    <div class="divider"></div>
+    <div class="muted" style="font-weight:700; margin-bottom:4px">등록한 수업시간</div>
+    <div class="muted" style="margin-bottom:8px">${studentScheduleSummary(studentId)}</div>
+    <div class="muted">특정 하루만 시간을 바꾸고 싶으면, 스케줄·시간표에서 그 수업을 눌러 '시간변경'을 쓰세요. 여기서는 요일·시간을 통째로 바꾸는 것만 해요.</div>
+    <div class="divider"></div>
+    <div class="muted" style="font-weight:700; margin-bottom:6px">🔄 전체 시간표 변경 (요일·시간을 통째로 바꾸기)</div>
+    <div class="muted" style="margin-bottom:8px">학생이 요일·시간을 완전히 바꾸는 경우 이걸 쓰세요. 지정한 날짜부터 이후의 '예정' 회차를 전부 지우고, 새 요일·시간으로 다시 이어서 만들어요. 이미 지난 수업(완료/당취 포함)은 그대로 남아요.</div>
+    <div class="row" style="align-items:flex-end">
+      <div class="field"><label>강사</label><select id="reschedTeacher">${teacherOptions(student.teacherId)}</select></div>
+      <div class="field"><label>새 시작일</label><input type="date" id="reschedStart" value="${todayStr()}"></div>
+      <div class="field"><label>새 시간</label><input type="time" id="reschedTime" value="15:00"></div>
+      <div class="field"><label>수업시간(분)</label><input type="number" id="reschedDuration" min="10" step="5" value="50" style="width:90px"></div>
+    </div>
+    <button class="btn warn" id="reschedBtn" type="button">이 날짜부터 전체 시간표 변경 적용</button>
+    <div class="divider"></div>
+    <div class="muted" style="font-weight:700; margin-bottom:6px">회차 연장 (계속 다니는 학생 — 매주 이어서 만들기)</div>
+    <div class="row" style="align-items:flex-end">
+      <div class="field"><label>몇 주 더</label><input type="number" id="extendWeeks" min="1" value="${ROLLING_WEEKS}" style="width:80px"></div>
+      <div class="field" style="justify-content:flex-end"><label>&nbsp;</label><button class="btn secondary" id="extendBtn" type="button">${lastSession ? `${fmtDate(lastSession.date)} 이후로 이어서 만들기` : '회차 만들기'}</button></div>
+    </div>
+    <div class="divider"></div>
+    <div class="muted" style="font-weight:700; margin-bottom:6px">회차 1개만 추가 (보강 등)</div>
+    <div class="row" style="align-items:flex-end">
+      <div class="field"><label>강사</label><select id="addRoundTeacher">${teacherOptions(student.teacherId)}</select></div>
+      <div class="field"><label>날짜</label><input type="date" id="addRoundDate" value="${todayStr()}"></div>
+      <div class="field"><label>시간</label><input type="time" id="addRoundTime" value="15:00"></div>
+      <div class="field"><label>수업시간(분)</label><input type="number" id="addRoundDuration" min="10" step="5" value="50" style="width:90px"></div>
+      <div class="field" style="justify-content:flex-end"><label>&nbsp;</label><button class="btn secondary" id="addRoundBtn" type="button">추가</button></div>
+    </div>
+    <div id="editStuWarn" class="warning-box"></div>
+    <div class="row" style="justify-content:flex-end; margin-top:10px">
+      <button class="btn secondary" id="mCancel">닫기</button>
+      <button class="btn" id="mSave">저장</button>
+    </div>
+  `;
+  backdrop.classList.add('show');
+  document.getElementById('mCancel').onclick = ()=> backdrop.classList.remove('show');
+
+  document.getElementById('markPaidBtn').onclick = ()=>{
+    const cycle = student.paymentCycle || 4;
+    const paid = normalizeStudentPayments(student);
+    let r = 1;
+    while(paid.includes(r) || !isDueRound(cycle, r)) r++;
+    paid.push(r);
+    saveData();
+    toast(`${r}회차를 결제완료로 표시했어요.`);
+    openStudentEditModal(studentId);
+  };
+
+  document.getElementById('reschedBtn').onclick = ()=>{
+    const newTeacherId = document.getElementById('reschedTeacher').value;
+    const newStart = document.getElementById('reschedStart').value;
+    const newTime = document.getElementById('reschedTime').value;
+    const newDuration = parseInt(document.getElementById('reschedDuration').value,10) || 50;
+    const warn = document.getElementById('editStuWarn');
+    warn.style.display = 'none';
+    if(!newTeacherId || !newStart || !newTime){
+      warn.textContent = '강사·새 시작일·새 시간을 모두 입력해주세요.';
+      warn.style.display = 'block';
+      return;
+    }
+    const toRemove = data.sessions.filter(s=> s.studentId===studentId && s.status==='scheduled' && s.date >= newStart);
+    const weeksToMake = Math.max(toRemove.length, ROLLING_WEEKS);
+    const plannedDates = [];
+    for(let i=0;i<weeksToMake;i++){ plannedDates.push(addDays(newStart, i*7)); }
+
+    const conflicts = [];
+    const removeIds = new Set(toRemove.map(s=>s.id));
+    plannedDates.forEach((d, idx)=>{
+      // don't count the sessions we're about to delete as a conflict against themselves
+      const conflict = data.sessions.find(s=>
+        !removeIds.has(s.id) && s.teacherId===newTeacherId && s.date===d && s.status!=='delayed_moved' &&
+        timeRangesOverlap(newTime, addMinutesToTime(newTime, newDuration), s.time, addMinutesToTime(s.time, s.duration||60))
+      );
+      const blockHit = blocksForTeacherOnDate(newTeacherId, d).find(b=>
+        b.startTime === b.endTime
+          ? (b.startTime >= newTime && b.startTime < addMinutesToTime(newTime, newDuration))
+          : timeRangesOverlap(newTime, addMinutesToTime(newTime, newDuration), b.startTime, b.endTime)
+      );
+      if(conflict){
+        conflicts.push(`${idx+1}주차: 같은 시간에 타 학생이 있습니다. (${fmtDate(d)} ${newTime} · ${studentName(conflict.studentId)} 학생)`);
+      } else if(blockHit){
+        conflicts.push(`${idx+1}주차: 이 시간은 ${teacherName(newTeacherId)} 강사의 쉬는시간/불가시간입니다. (${fmtDate(d)} ${newTime})`);
+      }
+    });
+    if(conflicts.length>0){
+      const msg = `변경되지 않았어요. ${conflicts.join(' / ')}`;
+      warn.textContent = msg;
+      warn.style.display = 'block';
+      alert(msg);
+      return;
+    }
+
+    openConfirmModal(`${fmtDate(newStart)}부터 예정된 수업 ${toRemove.length}개를 지우고, 새 요일·시간으로 다시 만들까요? (이미 지난 수업은 그대로 남아요)`, ()=>{
+      data.sessions = data.sessions.filter(s=> !removeIds.has(s.id));
+      const newSessions = generateWeeklySessions(student.id, newTeacherId, newStart, newTime, newDuration, 1, weeksToMake);
+      data.sessions.push(...newSessions);
+      renumberStudentRounds(student.id);
+      saveData();
+      toast('전체 시간표를 변경했어요.');
+      openStudentEditModal(studentId);
+    });
+  };
+
+  document.getElementById('extendBtn').onclick = ()=>{
+    const weeks = parseInt(document.getElementById('extendWeeks').value,10) || ROLLING_WEEKS;
+    const warn = document.getElementById('editStuWarn');
+    warn.style.display = 'none';
+
+    const patterns = detectWeeklyPattern(sessions);
+    if(patterns.length===0){
+      warn.textContent = '이 학생의 요일 패턴을 찾을 수 없어요. 먼저 회차를 1개 이상 등록해주세요.';
+      warn.style.display = 'block';
+      return;
+    }
+
+    const planned = []; // { date, time, teacherId, duration }
+    patterns.forEach(p=>{
+      for(let i=1;i<=weeks;i++){
+        planned.push({ date: addDays(p.lastDate, i*7), time: p.time, teacherId: p.teacherId, duration: p.duration });
+      }
+    });
+
+    const conflicts = [];
+    planned.forEach((p, idx)=>{
+      const avail = checkAvailability(p.teacherId, p.date, p.time, p.duration, null);
+      if(avail) conflicts.push(`${idx+1}: ${availabilityMessage(avail, p.teacherId, p.date, p.time)}`);
+    });
+    if(conflicts.length>0){
+      const msg = `연장되지 않았어요. ${conflicts.join(' / ')}`;
+      warn.textContent = msg;
+      warn.style.display = 'block';
+      alert(msg);
+      return;
+    }
+    const newSessions = planned.map(p=>({
+      id: uid(), studentId: student.id, teacherId: p.teacherId, date: p.date, time: p.time, duration: p.duration,
+      round: 0, status: 'scheduled'
+    }));
+    data.sessions.push(...newSessions);
+    renumberStudentRounds(student.id);
+    saveData();
+    const patternNote = patterns.length > 1 ? ` (감지된 요일 ${patterns.length}개 모두 이어서 만들었어요)` : '';
+    toast(`${weeks}주치를 더 만들었어요.${patternNote}`);
+    openStudentEditModal(studentId);
+  };
+
+  document.getElementById('addRoundBtn').onclick = ()=>{
+    const newTeacherId = document.getElementById('addRoundTeacher').value;
+    const newDate = document.getElementById('addRoundDate').value;
+    const newTime = document.getElementById('addRoundTime').value;
+    const newDuration = parseInt(document.getElementById('addRoundDuration').value,10) || 50;
+    const warn = document.getElementById('editStuWarn');
+    warn.style.display = 'none';
+    if(!newTeacherId || !newDate || !newTime){
+      warn.textContent = '강사·날짜·시간을 모두 입력해주세요.';
+      warn.style.display = 'block';
+      return;
+    }
+    const conflict = checkAvailability(newTeacherId, newDate, newTime, newDuration, null);
+    if(conflict){
+      const msg = availabilityMessage(conflict, newTeacherId, newDate, newTime);
+      warn.textContent = msg;
+      warn.style.display = 'block';
+      alert(msg);
+      return;
+    }
+    data.sessions.push({
+      id: uid(), studentId: student.id, teacherId: newTeacherId, date: newDate, time: newTime, duration: newDuration,
+      round: 0, status: 'scheduled'
+    });
+    renumberStudentRounds(student.id);
+    saveData();
+    toast('회차를 추가했어요.');
+    openStudentEditModal(studentId); // reopen to show the refreshed list
+  };
+
+  document.getElementById('mSave').onclick = ()=>{
+    const name = document.getElementById('editStuName').value.trim();
+    const defaultTeacherId = document.getElementById('editStuTeacher').value;
+    const paymentCycle = parseInt(document.getElementById('editStuCycle').value,10) || 4;
+    const warn = document.getElementById('editStuWarn');
+    warn.style.display='none';
+    if(!name){ warn.textContent='이름을 입력해주세요.'; warn.style.display='block'; return; }
+    if(!defaultTeacherId){ warn.textContent='기본 담당 강사를 선택해주세요.'; warn.style.display='block'; return; }
+
+    const newSubjects = Array.from(document.querySelectorAll('.editStuSubjectChk:checked')).map(c=>c.value);
+    student.name = name;
+    student.teacherId = defaultTeacherId;
+    student.paymentCycle = paymentCycle;
+    student.subjects = newSubjects;
+    saveData();
+    backdrop.classList.remove('show');
+    render();
+    toast('학생 정보를 수정했어요.');
+  };
+}
+
+function teacherOptions(selectedId){
+  if(data.teachers.length===0) return `<option value="">강사를 먼저 등록해주세요</option>`;
+  return data.teachers.map(t=>`<option value="${t.id}" ${t.id===selectedId?'selected':''}>${t.name}</option>`).join('');
+}
+
+// Looks at a student's most recent ~2 weeks of sessions to figure out their actual
+// weekly pattern (one slot, e.g. "매주 월 15:00", or two, e.g. "월 15:00 + 목 17:00").
+// Used by "회차 연장" so extending a twice-a-week student continues BOTH slots,
+// not just whichever session happened to be the very last one.
+function detectWeeklyPattern(sessions){
+  if(sessions.length===0) return [];
+  const lastDate = sessions[sessions.length-1].date;
+  const windowStart = addDays(lastDate, -13);
+  const recent = sessions.filter(s=> s.date >= windowStart && s.status !== 'delayed_moved');
+  const map = new Map();
+  recent.forEach(s=>{
+    const key = weekdayOf(s.date) + '|' + s.time;
+    map.set(key, { weekday: weekdayOf(s.date), time: s.time, teacherId: s.teacherId, duration: s.duration||50, lastDate: s.date });
+  });
+  return Array.from(map.values());
+}
+
+function generateWeeklySessions(studentId, teacherId, startDate, time, duration, startRound, weeksCount){
+  const sessions = [];
+  for(let i=0;i<weeksCount;i++){
+    sessions.push({
+      id: uid(), studentId, teacherId,
+      date: addDays(startDate, i*7), time, duration,
+      round: startRound+i, status: 'scheduled'
+    });
+  }
+  return sessions;
+}
+
+function onRegisterStudent(){
+  const name = document.getElementById('regName').value.trim();
+  const age = document.getElementById('regAge').value.trim();
+  const gender = document.getElementById('regGender').value;
+  const teacherId = document.getElementById('regTeacher').value;
+  const subjects = Array.from(document.querySelectorAll('.regSubjectChk:checked')).map(c=>c.value);
+  const slotsCount = parseInt(document.getElementById('regSlotsCount').value,10) || 1;
+  const duration = parseInt(document.getElementById('regDuration').value,10) || 50;
+  const paymentCycle = parseInt(document.getElementById('regPaymentCycle').value,10) || 4;
+  const weeksCount = parseInt(document.getElementById('regWeeksCount').value,10) || ROLLING_WEEKS;
+  const warnBox = document.getElementById('regWarning');
+  warnBox.style.display = 'none';
+
+  if(!name){ warnBox.textContent='이름을 입력해주세요.'; warnBox.style.display='block'; return; }
+  if(!teacherId){ warnBox.textContent='담당 강사를 선택해주세요.'; warnBox.style.display='block'; return; }
+
+  const slots = [{ date: document.getElementById('regStart').value, time: document.getElementById('regTime').value }];
+  if(slotsCount === 2){
+    slots.push({ date: document.getElementById('regStart2').value, time: document.getElementById('regTime2').value });
+  }
+  for(const slot of slots){
+    if(!slot.date || !slot.time){ warnBox.textContent='시작일과 시간을 모두 입력해주세요.'; warnBox.style.display='block'; return; }
+  }
+
+  // compute the exact intended date+time pairs for every slot first — no silent
+  // skip-forward. If any conflicts, block the whole registration.
+  const intended = [];
+  slots.forEach(slot=>{
+    for(let i=0;i<weeksCount;i++){ intended.push({ date: addDays(slot.date, i*7), time: slot.time }); }
+  });
+
+  const conflicts = [];
+  intended.forEach((p, idx)=>{
+    const avail = checkAvailability(teacherId, p.date, p.time, duration, null);
+    if(avail){
+      conflicts.push(`${idx+1}번째: ${availabilityMessage(avail, teacherId, p.date, p.time)}`);
+    }
+  });
+  if(conflicts.length>0){
+    const msg = `등록되지 않았어요. ${conflicts.join(' / ')}`;
+    warnBox.textContent = msg;
+    warnBox.style.display = 'block';
+    alert(msg);
+    return;
+  }
+
+  const student = {
+    id: uid(), name, teacherId, subjects, gender,
+    paymentCycle, paidRounds: [],
+    detail: age ? { age } : {}
+  };
+  const newSessions = intended.map(p=>({
+    id: uid(), studentId: student.id, teacherId, date: p.date, time: p.time, duration,
+    round: 0, status: 'scheduled'
+  }));
+
+  data.students.push(student);
+  data.sessions.push(...newSessions);
+  renumberStudentRounds(student.id);
+  saveData();
+  render();
+  toast(`${name} 학생 등록 완료! 매주 ${time}에 ${weeksCount}주치가 생성됐어요.`);
+}
+
+// ---------------- TEACHERS TAB ----------------
+function renderTeachers(root){
+  let html = `
+    <div class="panel">
+      <h3>강사 등록</h3>
+      <div class="row">
+        <div class="field grow"><label>강사 이름</label><input id="teacherName" placeholder="예: 김민지"></div>
+        <div class="field" style="justify-content:flex-end"><label>&nbsp;</label><button class="btn" id="addTeacherBtn">추가</button></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>강사 목록</h3>
+  `;
+  if(data.teachers.length===0){
+    html += `<div class="empty">등록된 강사가 없어요.</div>`;
+  } else {
+    html += `<table><thead><tr><th>이름</th><th>담당 학생 수</th><th>PIN 잠금</th><th>관리</th></tr></thead><tbody>`;
+    data.teachers.forEach(t=>{
+      const cnt = data.students.filter(s=>s.teacherId===t.id).length;
+      html += `<tr><td><b>${t.name}</b></td><td>${cnt}명</td>
+        <td>${t.pin ? '<span class="badge completed">설정됨 🔒</span>' : '<span class="muted">미설정</span>'}</td>
+        <td class="actions-cell">
+          <button class="btn small secondary" data-copy-link="${t.id}">🔗 개인 링크 복사</button>
+          <button class="btn small secondary" data-set-pin="${t.id}">${t.pin ? 'PIN 변경' : 'PIN 설정'}</button>
+          ${t.pin ? `<button class="btn small secondary" data-clear-pin="${t.id}">PIN 해제</button>` : ''}
+          <button class="btn small danger" data-del-teacher="${t.id}">삭제</button>
+        </td></tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  html += `<div class="note">강사 삭제는 담당 학생이 없을 때만 가능해요. 이 화면의 '보기 권한'에 강사가 자동으로 추가돼서, 각 강사는 본인 이름을 선택하면 본인 학생과 스케줄만 볼 수 있어요. PIN을 설정하면 그 강사(또는 관리자)로 전환할 때마다 비밀번호를 물어봐요 — 실수로 다른 사람 정보를 보는 걸 막아줘요.</div></div>
+
+    <div class="panel">
+      <h3>관리자 잠금</h3>
+      <div class="muted" style="margin-bottom:8px">설정하면 '관리자(전체 보기)'로 전환할 때도 비밀번호를 물어봐요.</div>
+      <div class="row">
+        <div class="field"><label>현재 상태</label><div style="padding-top:8px">${data.adminPin ? '<span class="badge completed">설정됨 🔒</span>' : '<span class="muted">미설정</span>'}</div></div>
+        <div class="field" style="justify-content:flex-end"><label>&nbsp;</label><button class="btn secondary" id="setAdminPinBtn">${data.adminPin ? '관리자 PIN 변경' : '관리자 PIN 설정'}</button></div>
+        ${data.adminPin ? `<div class="field" style="justify-content:flex-end"><label>&nbsp;</label><button class="btn secondary" id="clearAdminPinBtn">관리자 PIN 해제</button></div>` : ''}
+      </div>
+    </div>`;
+
+  html += `
+    <div class="panel">
+      <h3>쉬는시간 / 불가시간 등록</h3>
+      <div class="muted" style="margin-bottom:8px">여기서 등록한 시간은 시간표와 스케줄에 파란색으로 표시돼요. 학생 수업(검정색)과 구분돼서 한눈에 보여요.</div>
+      <div class="row">
+        <div class="field"><label>강사</label><select id="blockTeacher">${teacherOptions()}</select></div>
+        <div class="field">
+          <label>반복 방식</label>
+          <select id="blockMode">
+            <option value="weekly">매주 반복 (요일 선택, 여러 개 가능)</option>
+            <option value="range">특정 기간 (날짜 범위, 하루도 가능)</option>
+          </select>
+        </div>
+      </div>
+      <div class="row" id="blockWeekdayField">
+        <div class="field grow">
+          <label>요일 (여러 개 선택 가능)</label>
+          <div class="row" style="flex-wrap:wrap; gap:4px 10px; align-items:center">
+            ${['일','월','화','수','목','금','토'].map((dn,i)=>`
+              <label style="display:flex; align-items:center; gap:4px; font-size:12px; font-weight:500; cursor:pointer;">
+                <input type="checkbox" class="blockWeekdayChk" value="${i}" ${i>=1&&i<=5?'checked':''}> ${dn}
+              </label>
+            `).join('')}
+            <button class="btn small secondary" id="blockAllDaysBtn" type="button">매일 선택</button>
+            <button class="btn small secondary" id="blockWeekdaysBtn" type="button">평일만</button>
+          </div>
+        </div>
+      </div>
+      <div class="row" id="blockDateField" style="display:none">
+        <div class="field"><label>시작일</label><input type="date" id="blockStartDate" value="${todayStr()}"></div>
+        <div class="field"><label>며칠간</label><input type="number" id="blockDays" min="1" value="1" style="width:70px"></div>
+        <div class="field"><label>종료일 (자동계산, 직접수정 가능)</label><input type="date" id="blockEndDate" value="${todayStr()}"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>시작시간</label><input type="time" id="blockStartTime" value="12:00"></div>
+        <div class="field"><label>종료시간</label><input type="time" id="blockEndTime" value="13:00"></div>
+        <div class="field grow"><label>이름 (선택)</label><input id="blockLabel" placeholder="예: 점심시간, 개인사정"></div>
+        <div class="field" style="justify-content:flex-end"><label>&nbsp;</label><button class="btn" id="addBlockBtn">등록</button></div>
+      </div>
+      <div class="muted">예: 하한나 강사가 7/20부터 3일간 매일 13~16시 불가 → 반복방식 '특정 기간', 시작일 7/20, 며칠간 3, 시작시간 13:00, 종료시간 16:00 → 한 번에 등록돼요.</div>
+    </div>
+    <div class="panel">
+      <h3>등록된 쉬는시간 / 불가시간</h3>
+  `;
+  if(data.blocks.length===0){
+    html += `<div class="empty">등록된 쉬는시간이 없어요.</div>`;
+  } else {
+    html += `<table><thead><tr><th>강사</th><th>반복</th><th>시간</th><th>이름</th><th>관리</th></tr></thead><tbody>`;
+    const dayNames = ['일','월','화','수','목','금','토'];
+    data.blocks.forEach(b=>{
+      normalizeBlock(b);
+      const repeatLabel = b.mode==='weekly'
+        ? `매주 ${b.weekdays.slice().sort().map(d=>dayNames[d]).join('·')}요일`
+        : (b.startDate===b.endDate ? `${fmtDate(b.startDate)} (하루)` : `${fmtDate(b.startDate)} ~ ${fmtDate(b.endDate)}`);
+      const timeLabel = b.startTime===b.endTime ? b.startTime : `${b.startTime}~${b.endTime}`;
+      html += `<tr>
+        <td>${teacherName(b.teacherId)}</td>
+        <td>${repeatLabel}</td>
+        <td>${timeLabel}</td>
+        <td>${b.label || '-'}</td>
+        <td><button class="btn small danger" data-del-block="${b.id}">삭제</button></td>
+      </tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+  html += `</div>`;
+  root.innerHTML = html;
+  document.getElementById('addTeacherBtn').onclick = ()=>{
+    const val = document.getElementById('teacherName').value.trim();
+    if(!val) return;
+    data.teachers.push({ id: uid(), name: val });
+    saveData(); render(); toast('강사를 추가했어요.');
+  };
+  root.querySelectorAll('[data-del-teacher]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.delTeacher;
+      const cnt = data.students.filter(s=>s.teacherId===id).length;
+      if(cnt>0){ toast('담당 학생이 있는 강사는 삭제할 수 없어요.'); return; }
+      data.teachers = data.teachers.filter(t=>t.id!==id);
+      if(currentRole===id) currentRole='admin';
+      saveData(); render(); toast('강사를 삭제했어요.');
+    };
+  });
+  root.querySelectorAll('[data-copy-link]').forEach(btn=>{
+    btn.onclick = async ()=>{
+      const teacherId = btn.dataset.copyLink;
+      const url = `${location.origin}${location.pathname}?teacher=${teacherId}`;
+      try{
+        await navigator.clipboard.writeText(url);
+        toast('링크를 복사했어요. 강사님께 그대로 보내주세요.');
+      }catch(e){
+        prompt('아래 링크를 복사해서 강사님께 보내주세요:', url);
+      }
+    };
+  });
+  root.querySelectorAll('[data-set-pin]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const teacher = data.teachers.find(t=>t.id===btn.dataset.setPin);
+      openSetPinModal(`${teacher.name} 강사 PIN`, (newPin)=>{
+        teacher.pin = newPin;
+        saveData(); render(); toast('PIN을 설정했어요.');
+      });
+    };
+  });
+  root.querySelectorAll('[data-clear-pin]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const teacher = data.teachers.find(t=>t.id===btn.dataset.clearPin);
+      openConfirmModal(`${teacher.name} 강사의 PIN 잠금을 해제할까요?`, ()=>{
+        delete teacher.pin;
+        saveData(); render(); toast('PIN을 해제했어요.');
+      });
+    };
+  });
+  const setAdminPinBtn = document.getElementById('setAdminPinBtn');
+  if(setAdminPinBtn){
+    setAdminPinBtn.onclick = ()=>{
+      openSetPinModal('관리자 PIN', (newPin)=>{
+        data.adminPin = newPin;
+        saveData(); render(); toast('관리자 PIN을 설정했어요.');
+      });
+    };
+  }
+  const clearAdminPinBtn = document.getElementById('clearAdminPinBtn');
+  if(clearAdminPinBtn){
+    clearAdminPinBtn.onclick = ()=>{
+      openConfirmModal('관리자 PIN 잠금을 해제할까요?', ()=>{
+        delete data.adminPin;
+        saveData(); render(); toast('관리자 PIN을 해제했어요.');
+      });
+    };
+  }
+
+  const blockModeSel = document.getElementById('blockMode');
+  if(blockModeSel){
+    blockModeSel.onchange = (e)=>{
+      const isRange = e.target.value === 'range';
+      document.getElementById('blockWeekdayField').style.display = isRange ? 'none' : 'flex';
+      document.getElementById('blockDateField').style.display = isRange ? 'flex' : 'none';
+    };
+  }
+  const blockAllDaysBtn = document.getElementById('blockAllDaysBtn');
+  if(blockAllDaysBtn){
+    blockAllDaysBtn.onclick = ()=>{
+      document.querySelectorAll('.blockWeekdayChk').forEach(chk=> chk.checked = true);
+    };
+  }
+  const blockWeekdaysBtn = document.getElementById('blockWeekdaysBtn');
+  if(blockWeekdaysBtn){
+    blockWeekdaysBtn.onclick = ()=>{
+      document.querySelectorAll('.blockWeekdayChk').forEach(chk=>{
+        chk.checked = ['1','2','3','4','5'].includes(chk.value);
+      });
+    };
+  }
+  const blockStartDateInput = document.getElementById('blockStartDate');
+  const blockDaysInput = document.getElementById('blockDays');
+  const blockEndDateInput = document.getElementById('blockEndDate');
+  const syncEndDateFromDays = ()=>{
+    const start = blockStartDateInput.value;
+    const days = parseInt(blockDaysInput.value,10) || 1;
+    if(start) blockEndDateInput.value = addDays(start, days-1);
+  };
+  if(blockStartDateInput){
+    blockStartDateInput.onchange = syncEndDateFromDays;
+    blockDaysInput.onchange = syncEndDateFromDays;
+  }
+  const addBlockBtn = document.getElementById('addBlockBtn');
+  if(addBlockBtn){
+    addBlockBtn.onclick = ()=>{
+      const teacherId = document.getElementById('blockTeacher').value;
+      const mode = document.getElementById('blockMode').value;
+      const startTime = document.getElementById('blockStartTime').value;
+      const endTime = document.getElementById('blockEndTime').value;
+      const label = document.getElementById('blockLabel').value.trim();
+      if(!teacherId){ toast('강사를 선택해주세요.'); return; }
+      if(!startTime || !endTime){ toast('시작·종료 시간을 입력해주세요.'); return; }
+      if(endTime <= startTime){ toast('종료시간은 시작시간보다 늦어야 해요.'); return; }
+      const block = { id: uid(), teacherId, mode, startTime, endTime, label };
+      if(mode==='weekly'){
+        const weekdays = Array.from(document.querySelectorAll('.blockWeekdayChk:checked')).map(c=>parseInt(c.value,10));
+        if(weekdays.length===0){ toast('요일을 1개 이상 선택해주세요.'); return; }
+        block.weekdays = weekdays;
+      } else {
+        const startDate = document.getElementById('blockStartDate').value;
+        const endDate = document.getElementById('blockEndDate').value;
+        if(!startDate || !endDate){ toast('시작일·종료일을 입력해주세요.'); return; }
+        if(endDate < startDate){ toast('종료일은 시작일보다 빠를 수 없어요.'); return; }
+        block.startDate = startDate;
+        block.endDate = endDate;
+      }
+      data.blocks.push(block);
+      saveData(); render(); toast('쉬는시간을 등록했어요.');
+    };
+  }
+  root.querySelectorAll('[data-del-block]').forEach(btn=>{
+    btn.onclick = ()=>{
+      data.blocks = data.blocks.filter(b=>b.id!==btn.dataset.delBlock);
+      saveData(); render(); toast('삭제했어요.');
+    };
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>
